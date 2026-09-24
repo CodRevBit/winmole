@@ -1,0 +1,18 @@
+# WinMole .gitignore
+
+# Windows system files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Local cache & logs
+*.log
+history.jsonl
+config.json
+targets.json
+.winmole/
+
+# Test temp
+test_temp/
+TestResults/
