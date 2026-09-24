@@ -75,7 +75,7 @@ function Show-WinMoleMenu {
             $div = [string]::new($g.HLine, 65)
             Write-Host ""
             Write-Host ("  {0}{1}{2}" -f $c.Muted, $div, $c.Reset)
-            Write-Host ("  {0}Tip: Run {1}'mo <command>'{0} directly from any shell (e.g. {2}'mo clean'{0}){3}" -f $c.Muted, $c.Primary, $c.Text, $c.Reset)
+            Write-Host ("  {0}Tip: Run {1}'winmole <command>'{0} directly from any shell (e.g. {2}'winmole clean'{0}){3}" -f $c.Muted, $c.Primary, $c.Text, $c.Reset)
 
             # Read Key
             $key = [Console]::ReadKey($true)

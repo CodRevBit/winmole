@@ -63,7 +63,6 @@ if ($Help -or $Subcommand -eq "--help" -or $Subcommand -eq "-h" -or $Subcommand 
     Write-WMHeader -Title ("WINMOLE v{0}" -f $WinMoleVersion) -Subtitle "Windows Terminal Maintenance Toolkit"
     Write-Host ""
     Write-Host ("  {0}USAGE:{1}" -f $c.Bold, $c.Reset)
-    Write-Host "    mo [command] [options]"
     Write-Host "    winmole [command] [options]"
     Write-Host ""
     Write-Host ("  {0}COMMANDS:{1}" -f $c.Bold, $c.Reset)
@@ -84,13 +83,13 @@ if ($Help -or $Subcommand -eq "--help" -or $Subcommand -eq "-h" -or $Subcommand 
     Write-Host ("    {0}-v, --version{1}       Display WinMole version information" -f $c.Secondary, $c.Reset)
     Write-Host ""
     Write-Host ("  {0}EXAMPLES:{1}" -f $c.Bold, $c.Reset)
-    Write-Host "    mo                             # Open interactive menu"
-    Write-Host "    mo status                      # Launch live terminal monitor"
-    Write-Host "    mo analyze C:\Projects         # Profile disk space"
-    Write-Host "    mo purge --dry-run             # Scan project build junk without deleting"
-    Write-Host "    mo clean                       # Clean %TEMP% and crash dumps"
-    Write-Host "    mo uninstall vlc               # Uninstall application via winget"
-    Write-Host "    mo doctor                      # Run environment diagnostics"
+    Write-Host "    winmole                        # Open interactive menu"
+    Write-Host "    winmole status                 # Launch live terminal monitor"
+    Write-Host "    winmole analyze C:\Projects    # Profile disk space"
+    Write-Host "    winmole purge --dry-run        # Scan project build junk without deleting"
+    Write-Host "    winmole clean                  # Clean %TEMP% and crash dumps"
+    Write-Host "    winmole uninstall vlc          # Uninstall application via winget"
+    Write-Host "    winmole doctor                 # Run environment diagnostics"
     Write-Host ""
     exit 0
 }
@@ -151,7 +150,7 @@ switch ($Subcommand.ToLower()) {
     }
     default {
         Write-WMError ("Unknown subcommand '{0}'." -f $Subcommand)
-        Write-Host "Run 'mo --help' for a list of available commands."
+        Write-Host "Run 'winmole --help' for a list of available commands."
         exit 1
     }
 }

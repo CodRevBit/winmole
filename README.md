@@ -40,11 +40,10 @@ To remove WinMole:
 
 ## Command Reference
 
-Run `mo` without arguments to launch the **Interactive Terminal Menu**, or use direct subcommands:
+Run `winmole` without arguments to launch the **Interactive Terminal Menu**, or use direct subcommands:
 
 ```
   USAGE:
-    mo [command] [options]
     winmole [command] [options]
 
   COMMANDS:
@@ -69,25 +68,25 @@ Run `mo` without arguments to launch the **Interactive Terminal Menu**, or use d
 
 ```powershell
 # Open interactive keyboard-navigable menu
-mo
+winmole
 
 # Launch system performance monitor
-mo status
+winmole status
 
 # Analyze disk space usage in current or target folder
-mo analyze C:\Projects
+winmole analyze C:\Projects
 
 # Scan for dev build junk (node_modules, target, etc.) in dry-run mode
-mo purge --dry-run
+winmole purge --dry-run
 
 # Purge developer artifacts in a specific project without prompt
-mo purge C:\Projects\my-app -f
+winmole purge C:\Projects\my-app -f
 
 # Clean temp files and error crash dumps safely
-mo clean
+winmole clean
 
 # Run environment and tool diagnostics
-mo doctor
+winmole doctor
 ```
 
 ---

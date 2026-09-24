@@ -96,5 +96,5 @@ if ($PROFILE) {
 Write-Host ""
 Write-Host ("{0}[OK] WinMole v1.0.0 installed successfully!{1}" -f $cSuccess, $cReset)
 Write-Host ""
-Write-Host ("  You can now run: {0}mo{1} or {0}winmole{1} from any terminal." -f $cPrimary, $cReset)
+Write-Host ("  You can now run: {0}winmole{1} from any terminal." -f $cPrimary, $cReset)
 Write-Host ""
