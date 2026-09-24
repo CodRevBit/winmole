@@ -111,19 +111,20 @@ function Invoke-WinMoleClean {
     )
     Write-WMPanel -Title "Cleanup Summary" -Lines $sumLines -Width 67
 
+    $margin = Get-WMMargin -ContentWidth 67
     $div = [string]::new($g.HLine, 67)
     Write-Host ""
-    Write-Host ("  {0}Target Category                        Files        Reclaimable Size{1}" -f $c.Muted, $c.Reset)
-    Write-Host ("  {0}{1}{2}" -f $c.Border, $div, $c.Reset)
+    Write-Host ("{0}{1}Target Category                        Files        Reclaimable Size{2}" -f $margin, $c.Muted, $c.Reset)
+    Write-Host ("{0}{1}{2}{3}" -f $margin, $c.Border, $div, $c.Reset)
 
     foreach ($r in $results) {
         $targetPadded = $r.Target.PadRight(38)
         if ($r.Status -eq "Skipped") {
-            Write-Host ("  {0}{1}{2}Skipped      {3}{4}" -f $c.Text, $targetPadded, $c.Muted, $r.Reason, $c.Reset)
+            Write-Host ("{0}{1}{2}{3}Skipped      {4}{5}" -f $margin, $c.Text, $targetPadded, $c.Muted, $r.Reason, $c.Reset)
         } else {
             $countPadded = ("{0:N0}" -f $r.FileCount).PadRight(13)
             $sizePadded = Format-WMBytes $r.Bytes
-            Write-Host ("  {0}{1}{2}{3}{4}{5}" -f $c.Text, $targetPadded, $countPadded, $c.Success, $sizePadded, $c.Reset)
+            Write-Host ("{0}{1}{2}{3}{4}{5}{6}" -f $margin, $c.Text, $targetPadded, $countPadded, $c.Success, $sizePadded, $c.Reset)
         }
     }
     Write-Host ""
@@ -151,7 +152,7 @@ function Invoke-WinMoleClean {
             Write-WMWarning "Non-interactive environment detected without --force. Cleanup aborted for safety."
             return
         }
-        $resp = Read-Host ("  Proceed with cleaning {0} files ({1})? [y/N]" -f $totalFiles, (Format-WMBytes $totalReclaimableBytes))
+        $resp = Read-Host ("{0}Proceed with cleaning {1} files ({2})? [y/N]" -f $margin, $totalFiles, (Format-WMBytes $totalReclaimableBytes))
         if ($resp -match "^[yY](es)?$") {
             $confirmed = $true
         }

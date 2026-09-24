@@ -87,8 +87,8 @@ function Invoke-WinMoleNativeStatus {
 
             # Render Screen Buffer
             Write-Host ("{0}[H" -f $global:WM_ESC) -NoNewline
-            Write-WMHeader -Title "WINMOLE STATUS" -Subtitle "Live Terminal Monitor"
-            Write-WMShortcuts -Items @(@("esc", "menu"), @("q", "exit"), @("r", "refresh"))
+            Write-WMHeader -Title "WINMOLE STATUS" -Subtitle "Live Terminal Monitor" -Width 76
+            Write-WMShortcuts -Items @(@("esc", "menu"), @("q", "exit"), @("r", "refresh")) -Width 76
             Write-Host ""
 
             # Panel 1: Hardware Summary
@@ -101,7 +101,7 @@ function Invoke-WinMoleNativeStatus {
                 "",
                 ("System Uptime: {0}{1}{2}  {3}  OS: {4}{5}{2}" -f $c.Secondary, $uptimeStr, $c.Reset, $g.Dot, $c.Text, $os.Caption)
             )
-            Write-WMPanel -Title "Hardware Overview" -Lines $hwLines -Width 67
+            Write-WMPanel -Title "Hardware Overview" -Lines $hwLines -Width 76
 
             # Panel 2: Storage Drives
             $driveLines = @()
@@ -110,10 +110,10 @@ function Invoke-WinMoleNativeStatus {
                 $drivePct = if ($totalDrive -gt 0) { [math]::Round(($d.Used / $totalDrive) * 100, 1) } else { 0 }
                 $driveLines += ("Drive {0}{1}:{2}  {3}  {4} free of {5}" -f $c.Bold, $d.Name, $c.Reset, (Format-WMProgressBar -Percent $drivePct -Width 18), (Format-WMBytes $d.Free), (Format-WMBytes $totalDrive))
             }
-            Write-WMPanel -Title "Storage Drives" -Lines $driveLines -Width 67
+            Write-WMPanel -Title "Storage Drives" -Lines $driveLines -Width 76
 
             # Panel 3: Top Processes
-            $procDiv = [string]::new($g.HLine, 63)
+            $procDiv = [string]::new($g.HLine, 72)
             $procLines = @(
                 ("{0}PID       Process Name                    Memory        Handles{1}" -f $c.Muted, $c.Reset),
                 ("{0}{1}{2}" -f $c.Border, $procDiv, $c.Reset)
@@ -125,7 +125,7 @@ function Invoke-WinMoleNativeStatus {
                 $memPadded = (Format-WMBytes $p.WorkingSet).PadRight(12)
                 $procLines += ("{0}{1}{2}{3}{4}{5}" -f $c.Text, $pidPadded, $pNamePadded, $memPadded, $p.Handles, $c.Reset)
             }
-            Write-WMPanel -Title "Top Processes by Memory" -Lines $procLines -Width 67
+            Write-WMPanel -Title "Top Processes by Memory" -Lines $procLines -Width 76
 
             Start-Sleep -Milliseconds 1000
         }

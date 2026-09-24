@@ -9,11 +9,15 @@ function Wait-WMMenuFallback {
         return $true
     }
 
+    $cardWidth = 30
+    $margin = Get-WMMargin -ContentWidth $cardWidth
+    $inner = $cardWidth - 2
+
     Write-Host ""
     # Yoinks-style action card
-    Write-Host ("  {0}{1}{2}{3}" -f $c.Border, $g.TopL, ([string]::new($g.HLine, 26)), $g.TopR)
-    Write-Host ("  {0}{1}{2}   {3}{4} return to menu{2}     {0}{1}{2}" -f $c.Border, $g.VLine, $c.Reset, $c.Primary, [char]0x21B5)
-    Write-Host ("  {0}{1}{2}{3}" -f $c.Border, $g.BotL, ([string]::new($g.HLine, 26)), $g.BotR)
+    Write-Host ("{0}{1}{2}{3}{4}" -f $margin, $c.Border, $g.TopL, ([string]::new($g.HLine, $inner)), $g.TopR)
+    Write-Host ("{0}{1}{2}{3}    {4}{5} return to menu{3}     {1}{2}{3}" -f $margin, $c.Border, $g.VLine, $c.Reset, $c.Primary, [char]0x21B5)
+    Write-Host ("{0}{1}{2}{3}{4}" -f $margin, $c.Border, $g.BotL, ([string]::new($g.HLine, $inner)), $g.BotR)
     Write-Host ""
 
     $shortcuts = @(
@@ -51,9 +55,10 @@ function Show-WinMoleMenu {
 
     # Non-interactive fallback
     if (-not [Environment]::UserInteractive -or [Console]::IsInputRedirected) {
-        Write-WMHeader -Title "WINMOLE" -Subtitle "System Maintenance Menu"
+        Write-WMHeader -Title "WINMOLE" -Subtitle "System Maintenance Menu" -Width 76
+        $margin = Get-WMMargin -ContentWidth 76
         foreach ($opt in $menuOptions) {
-            Write-Host ("  [{0}] {1} {2}" -f $opt.Key, $opt.Name.PadRight(18), $opt.Desc)
+            Write-Host ("{0}[{1}] {2} {3}" -f $margin, $opt.Key, $opt.Name.PadRight(18), $opt.Desc)
         }
         return
     }
@@ -85,14 +90,15 @@ function Show-WinMoleMenu {
                 Move-WMCursorHome
 
                 # Yoinks block logo & tagline
-                Write-WMLogo
+                Write-WMLogo -Width 76
 
                 Write-Host ("{0}" -f $c.ClearLine)
 
                 # Yoinks-style Snapshot Panel
-                $snapWidth = 72
-                $snapLine = ("Host: {0}  {1}  CPU: {2}%  {1}  RAM: {3}/{4} GB ({5}%)  {1}  C: {6} GB free" -f $env:COMPUTERNAME, $g.Dot, $cpuPct, $usedRamGB, $totalRamGB, $ramPct, $cFreeGB)
-                Write-WMPanel -Title "Snapshot" -Lines @($snapLine) -Width $snapWidth
+                $snapWidth = 76
+                $hostName = if ($env:COMPUTERNAME.Length -gt 14) { $env:COMPUTERNAME.Substring(0, 12) + ".." } else { $env:COMPUTERNAME }
+                $snapLine = ("Host: {0}  {1}  CPU: {2}%  {1}  RAM: {3}/{4} GB ({5}%)  {1}  C: {6} GB free" -f $hostName, $g.Dot, $cpuPct, $usedRamGB, $totalRamGB, $ramPct, $cFreeGB)
+                Write-WMPanel -Title "Snapshot" -Lines @($snapLine) -Width $snapWidth -CenterLines
 
                 Write-Host ("{0}" -f $c.ClearLine)
 
@@ -122,7 +128,7 @@ function Show-WinMoleMenu {
                     @("1-6", "direct"),
                     @("^c", "quit")
                 )
-                Write-WMShortcuts -Items $shortcuts
+                Write-WMShortcuts -Items $shortcuts -Width $snapWidth
 
                 # Read key without blocking render
                 $key = [Console]::ReadKey($true)

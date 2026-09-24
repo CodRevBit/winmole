@@ -156,10 +156,11 @@ function Invoke-WinMoleNativePurge {
     )
     Write-WMPanel -Title "Artifacts Detected" -Lines $summaryLines -Width 67
 
+    $margin = Get-WMMargin -ContentWidth 67
     $div = [string]::new($g.HLine, 67)
     Write-Host ""
-    Write-Host ("  {0}Artifact Path                                        Type         Size{1}" -f $c.Muted, $c.Reset)
-    Write-Host ("  {0}{1}{2}" -f $c.Border, $div, $c.Reset)
+    Write-Host ("{0}{1}Artifact Path                                        Type         Size{2}" -f $margin, $c.Muted, $c.Reset)
+    Write-Host ("{0}{1}{2}{3}" -f $margin, $c.Border, $div, $c.Reset)
 
     foreach ($item in $foundArtifacts) {
         $pathDisplay = $item.Path
@@ -169,7 +170,7 @@ function Invoke-WinMoleNativePurge {
         $pathPadded = $pathDisplay.PadRight(49)
         $ecoPadded = $item.Ecosystem.PadRight(13)
         $sizePadded = Format-WMBytes $item.Size
-        Write-Host ("  {0}{1}{2}{3}{4}{5}{6}" -f $c.Text, $pathPadded, $c.Secondary, $ecoPadded, $c.Success, $sizePadded, $c.Reset)
+        Write-Host ("{0}{1}{2}{3}{4}{5}{6}{7}" -f $margin, $c.Text, $pathPadded, $c.Secondary, $ecoPadded, $c.Success, $sizePadded, $c.Reset)
     }
     Write-Host ""
 
@@ -184,8 +185,8 @@ function Invoke-WinMoleNativePurge {
             Write-WMWarning "Non-interactive environment detected without --force. Purge aborted for safety."
             return
         }
-        Write-Host ("  {0}Caution: Deleted build artifacts cannot be restored from the Recycle Bin.{1}" -f $c.Danger, $c.Reset)
-        $resp = Read-Host ("  Delete these {0} artifact directories? [y/N]" -f $foundArtifacts.Count)
+        Write-Host ("{0}{1}Caution: Deleted build artifacts cannot be restored from the Recycle Bin.{2}" -f $margin, $c.Danger, $c.Reset)
+        $resp = Read-Host ("{0}Delete these {1} artifact directories? [y/N]" -f $margin, $foundArtifacts.Count)
         if ($resp -match "^[yY](es)?$") {
             $confirmed = $true
         }
@@ -202,7 +203,7 @@ function Invoke-WinMoleNativePurge {
 
     foreach ($item in $foundArtifacts) {
         try {
-            Write-Host ("  {0}Purging:{1} {2}... " -f $c.Muted, $c.Reset, $item.Path) -NoNewline
+            Write-Host ("{0}{1}Purging:{2} {3}... " -f $margin, $c.Muted, $c.Reset, $item.Path) -NoNewline
             [System.IO.Directory]::Delete($item.Path, $true)
             $deletedCount++
             $freedBytes += $item.Size

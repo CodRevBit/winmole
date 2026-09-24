@@ -101,10 +101,11 @@ function Invoke-WinMoleNativeAnalyze {
     )
     Write-WMPanel -Title "Scan Summary" -Lines $summaryLines -Width 65
 
+    $margin = Get-WMMargin -ContentWidth 65
     $div = [string]::new($g.HLine, 61)
     Write-Host ""
-    Write-Host ("  {0}Name                            Size          Files    Proportion{1}" -f $c.Muted, $c.Reset)
-    Write-Host ("  {0}{1}{2}" -f $c.Muted, $div, $c.Reset)
+    Write-Host ("{0}{1}Name                            Size          Files    Proportion{2}" -f $margin, $c.Muted, $c.Reset)
+    Write-Host ("{0}{1}{2}{3}" -f $margin, $c.Muted, $div, $c.Reset)
 
     foreach ($item in $sorted) {
         $pct = if ($totalRootBytes -gt 0) { ($item.Bytes / $totalRootBytes) * 100 } else { 0 }
@@ -122,7 +123,7 @@ function Invoke-WinMoleNativeAnalyze {
         $barEmpty = [string]::new($g.Shade, $emptyCount)
         $bar = "{0}{1}{2}{3}{4}" -f $c.Primary, $barFilled, $c.Muted, $barEmpty, $c.Reset
 
-        Write-Host ("  {0}{1}{2}{3}{4} {5:N1}%{6}" -f $c.Text, $namePadded, $sizePadded, $filesPadded, $bar, $pct, $c.Reset)
+        Write-Host ("{0}{1}{2}{3}{4}{5} {6:N1}%{7}" -f $margin, $c.Text, $namePadded, $sizePadded, $filesPadded, $bar, $pct, $c.Reset)
     }
     Write-Host ""
 }

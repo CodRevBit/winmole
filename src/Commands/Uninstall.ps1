@@ -23,9 +23,11 @@ function Invoke-WinMoleUninstall {
         return
     }
 
+    $margin = Get-WMMargin -ContentWidth 76
+
     # Interactive search & select
     Write-Host ""
-    Write-Host "  Enter application name to search and uninstall $($c.Muted)(or press Enter to list all)$($c.Reset): " -NoNewline
+    Write-Host ("{0}Enter application name to search and uninstall {1}(or press Enter to list all){2}: " -f $margin, $c.Muted, $c.Reset) -NoNewline
     $searchTerm = Read-Host
 
     Write-Host ""
@@ -39,7 +41,7 @@ function Invoke-WinMoleUninstall {
     }
 
     Write-Host ""
-    Write-Host "  Enter the exact $($c.Primary)Id$($c.Reset) or $($c.Primary)Name$($c.Reset) to uninstall $($c.Muted)(or press Enter to cancel)$($c.Reset): " -NoNewline
+    Write-Host ("{0}Enter the exact {1}Id{2} or {1}Name{2} to uninstall {3}(or press Enter to cancel){2}: " -f $margin, $c.Primary, $c.Reset, $c.Muted) -NoNewline
     $targetApp = Read-Host
 
     if ([string]::IsNullOrWhiteSpace($targetApp)) {
@@ -48,7 +50,7 @@ function Invoke-WinMoleUninstall {
     }
 
     Write-Host ""
-    $confirm = Read-Host "  Are you sure you want to uninstall '$targetApp'? [y/N]"
+    $confirm = Read-Host ("{0}Are you sure you want to uninstall '$targetApp'? [y/N]" -f $margin)
     if ($confirm -match "^[yY](es)?$") {
         Write-Host ""
         Write-WMInfo "Executing: winget uninstall `"$targetApp`"..."

@@ -162,7 +162,31 @@ function Test-WMAdmin {
     }
 }
 
+function Get-WMConsoleWidth {
+    try {
+        if ([Console]::WindowWidth -gt 20) {
+            return [Console]::WindowWidth
+        }
+    } catch {}
+    try {
+        if ($Host.UI.RawUI.WindowSize.Width -gt 20) {
+            return $Host.UI.RawUI.WindowSize.Width
+        }
+    } catch {}
+    return 80
+}
+
+function Get-WMMargin {
+    param([int]$ContentWidth = 76)
+    $consoleWidth = Get-WMConsoleWidth
+    $marginLen = [math]::Max(2, [int][math]::Floor(($consoleWidth - $ContentWidth) / 2))
+    return (" " * $marginLen)
+}
+
 function Write-WMLogo {
+    param(
+        [int]$Width = 76
+    )
     $c = $global:WM_Color
     $g = $global:WM_Glyphs
 
@@ -176,84 +200,128 @@ function Write-WMLogo {
     $row1 = -join @($b, ' ', $b, ' ', $b, '  ', $d, '  ', $b, ' ', $d, ' ', $b, ' ', $d, ' ', $b, ' ', $b, ' ', $d, ' ', $b, '   ', $b, $t, $t)
     $row2 = -join @(' ', $t, ' ', $t, '  ', $t, $t, $t, ' ', $t, ' ', $t, ' ', $t, '   ', $t, ' ', $t, $t, $t, ' ', $t, $t, $t, ' ', $t, $t, $t)
 
-    Write-Host ("  {0}{1}{2}{3}" -f $c.Primary, $row0, $c.Reset, $c.ClearLine)
-    Write-Host ("  {0}{1}{2}{3}" -f $c.Primary, $row1, $c.Reset, $c.ClearLine)
-    Write-Host ("  {0}{1}{2}{3}" -f $c.Primary, $row2, $c.Reset, $c.ClearLine)
+    $tagline = "clean any junk. status. purge. done."
+    $subline = "temp {0} crash dumps {0} node_modules {0} target {0} .venv {0} winget" -f $g.Dot
+
+    $consoleWidth = Get-WMConsoleWidth
+    $pad0   = [math]::Max(2, [int][math]::Floor(($consoleWidth - $row0.Length) / 2))
+    $padTag = [math]::Max(2, [int][math]::Floor(($consoleWidth - $tagline.Length) / 2))
+    $padSub = [math]::Max(2, [int][math]::Floor(($consoleWidth - $subline.Length) / 2))
+
+    Write-Host ("{0}{1}{2}{3}{4}" -f (" " * $pad0), $c.Primary, $row0, $c.Reset, $c.ClearLine)
+    Write-Host ("{0}{1}{2}{3}{4}" -f (" " * $pad0), $c.Primary, $row1, $c.Reset, $c.ClearLine)
+    Write-Host ("{0}{1}{2}{3}{4}" -f (" " * $pad0), $c.Primary, $row2, $c.Reset, $c.ClearLine)
     Write-Host ("{0}" -f $c.ClearLine)
-    Write-Host ("  {0}clean any junk. status. purge. done.{1}{2}" -f $c.Primary, $c.Reset, $c.ClearLine)
-    Write-Host ("  {0}temp {1} crash dumps {1} node_modules {1} target {1} .venv {1} winget{2}{3}" -f $c.Muted, $g.Dot, $c.Reset, $c.ClearLine)
+    Write-Host ("{0}{1}{2}{3}{4}" -f (" " * $padTag), $c.Primary, $tagline, $c.Reset, $c.ClearLine)
+    Write-Host ("{0}{1}{2}{3}{4}" -f (" " * $padSub), $c.Muted, $subline, $c.Reset, $c.ClearLine)
 }
 
 function Write-WMHeader {
     param(
         [string]$Title = "WINMOLE",
-        [string]$Subtitle = "Windows System Maintenance & Monitor"
+        [string]$Subtitle = "Windows System Maintenance & Monitor",
+        [int]$Width = 76
     )
     $c = $global:WM_Color
     $g = $global:WM_Glyphs
     $isAdmin = Test-WMAdmin
     $adminTag = if ($isAdmin) { " " + $c.Danger + "[ADMIN]" + $c.Reset } else { "" }
-    $divider = [string]::new($g.HLine, 65)
+    $adminPlain = if ($isAdmin) { " [ADMIN]" } else { "" }
+    
+    $headPlain = "{0}{1}  {2}  {3}" -f $Title, $adminPlain, $g.Dot, $Subtitle
+    $dividerLen = [math]::Max($Width, $headPlain.Length)
+
+    $consoleWidth = Get-WMConsoleWidth
+    $marginLen = [math]::Max(2, [int][math]::Floor(($consoleWidth - $dividerLen) / 2))
+    $margin = " " * $marginLen
+
+    $divider = [string]::new($g.HLine, $dividerLen)
     
     Write-Host ""
-    Write-Host ("  {0}{1}{2}{3}{4}  {5}{6}{3}  {7}{8}{3}{9}" -f $c.Primary, $c.Bold, $Title, $c.Reset, $adminTag, $c.Border, $g.Dot, $c.Secondary, $Subtitle, $c.ClearLine)
-    Write-Host ("  {0}{1}{2}{3}" -f $c.Border, $divider, $c.Reset, $c.ClearLine)
+    Write-Host ("{0}{1}{2}{3}{4}{5}  {6}{7}{4}  {8}{9}{4}{10}" -f $margin, $c.Primary, $c.Bold, $Title, $c.Reset, $adminTag, $c.Border, $g.Dot, $c.Secondary, $Subtitle, $c.ClearLine)
+    Write-Host ("{0}{1}{2}{3}{4}" -f $margin, $c.Border, $divider, $c.Reset, $c.ClearLine)
 }
 
 function Write-WMPanel {
     param(
         [string]$Title,
         [string[]]$Lines,
-        [int]$Width = 67
+        [int]$Width = 76,
+        [switch]$CenterLines
     )
     $c = $global:WM_Color
     $g = $global:WM_Glyphs
 
+    $consoleWidth = Get-WMConsoleWidth
+    $effectiveWidth = if ($consoleWidth -gt 24 -and $consoleWidth -lt $Width) { $consoleWidth - 2 } else { $Width }
+    $marginLen = [math]::Max(2, [int][math]::Floor(($consoleWidth - $effectiveWidth) / 2))
+    $margin = " " * $marginLen
+
     # Yoinks-style panel with embedded top title
-    $inner = $Width - 2
+    $inner = $effectiveWidth - 2
     $titleStr = " $Title "
     $tailLen = $inner - 1 - $titleStr.Length
     if ($tailLen -lt 1) { $tailLen = 1 }
     $tail = [string]::new($g.HLine, $tailLen)
 
-    Write-Host ("  {0}{1}{2}{3}{4}{5}{0}{6}{7}{3}{8}" -f $c.Border, $g.TopL, $g.HLine, $c.Reset, $c.Primary, $titleStr, $tail, $g.TopR, $c.ClearLine)
+    Write-Host ("{0}{1}{2}{3}{4}{5}{6}{1}{7}{8}{4}{9}" -f $margin, $c.Border, $g.TopL, $g.HLine, $c.Reset, $c.Primary, $titleStr, $tail, $g.TopR, $c.ClearLine)
     
     foreach ($item in $Lines) {
         $plain = $item -replace "\x1B\[[0-9;]*[a-zA-Z]", ""
-        $pad = $Width - 4 - $plain.Length
+        $pad = $effectiveWidth - 4 - $plain.Length
         if ($pad -lt 0) { $pad = 0 }
-        $spaces = " " * $pad
-        Write-Host ("  {0}{1}{2} {3}{4} {0}{1}{2}{5}" -f $c.Border, $g.VLine, $c.Reset, $item, $spaces, $c.ClearLine)
+        if ($CenterLines) {
+            $leftPad = [int][math]::Floor($pad / 2)
+            $rightPad = $pad - $leftPad
+            Write-Host ("{0}{1}{2}{3} {4}{5}{6} {1}{2}{3}{7}" -f $margin, $c.Border, $g.VLine, $c.Reset, (" " * $leftPad), $item, (" " * $rightPad), $c.ClearLine)
+        } else {
+            $spaces = " " * $pad
+            Write-Host ("{0}{1}{2}{3} {4}{5} {1}{2}{3}{6}" -f $margin, $c.Border, $g.VLine, $c.Reset, $item, $spaces, $c.ClearLine)
+        }
     }
 
     $hBottom = [string]::new($g.HLine, $inner)
-    Write-Host ("  {0}{1}{2}{3}{4}{5}" -f $c.Border, $g.BotL, $hBottom, $g.BotR, $c.Reset, $c.ClearLine)
+    Write-Host ("{0}{1}{2}{3}{4}{5}{6}" -f $margin, $c.Border, $g.BotL, $hBottom, $g.BotR, $c.Reset, $c.ClearLine)
 }
 
 function Write-WMBannerBox {
     param(
         [string[]]$Lines,
-        [int]$Width = 67
+        [int]$Width = 76,
+        [switch]$CenterLines
     )
     $c = $global:WM_Color
     $g = $global:WM_Glyphs
-    $h = [string]::new($g.HLine, $Width - 2)
 
-    Write-Host ("  {0}{1}{2}{3}{4}{5}" -f $c.Border, $g.TopL, $h, $g.TopR, $c.Reset, $c.ClearLine)
+    $consoleWidth = Get-WMConsoleWidth
+    $effectiveWidth = if ($consoleWidth -gt 24 -and $consoleWidth -lt $Width) { $consoleWidth - 2 } else { $Width }
+    $marginLen = [math]::Max(2, [int][math]::Floor(($consoleWidth - $effectiveWidth) / 2))
+    $margin = " " * $marginLen
+
+    $h = [string]::new($g.HLine, $effectiveWidth - 2)
+
+    Write-Host ("{0}{1}{2}{3}{4}{5}" -f $margin, $c.Border, $g.TopL, $h, $g.TopR, $c.Reset, $c.ClearLine)
     foreach ($item in $Lines) {
         $plain = $item -replace "\x1B\[[0-9;]*[a-zA-Z]", ""
-        $pad = $Width - 4 - $plain.Length
+        $pad = $effectiveWidth - 4 - $plain.Length
         if ($pad -lt 0) { $pad = 0 }
-        $spaces = " " * $pad
-        Write-Host ("  {0}{1}{2} {3}{4} {0}{1}{2}{5}" -f $c.Border, $g.VLine, $c.Reset, $item, $spaces, $c.ClearLine)
+        if ($CenterLines) {
+            $leftPad = [int][math]::Floor($pad / 2)
+            $rightPad = $pad - $leftPad
+            Write-Host ("{0}{1}{2}{3} {4}{5}{6} {1}{2}{3}{7}" -f $margin, $c.Border, $g.VLine, $c.Reset, (" " * $leftPad), $item, (" " * $rightPad), $c.ClearLine)
+        } else {
+            $spaces = " " * $pad
+            Write-Host ("{0}{1}{2}{3} {4}{5} {1}{2}{3}{6}" -f $margin, $c.Border, $g.VLine, $c.Reset, $item, $spaces, $c.ClearLine)
+        }
     }
-    Write-Host ("  {0}{1}{2}{3}{4}{5}" -f $c.Border, $g.BotL, $h, $g.BotR, $c.Reset, $c.ClearLine)
+    Write-Host ("{0}{1}{2}{3}{4}{5}" -f $margin, $c.Border, $g.BotL, $h, $g.BotR, $c.Reset, $c.ClearLine)
 }
 
 function Write-WMShortcuts {
     param(
         [array]$Items,
-        [string]$Leading = ""
+        [string]$Leading = "",
+        [int]$Width = 76
     )
     $c = $global:WM_Color
     $g = $global:WM_Glyphs
@@ -270,33 +338,44 @@ function Write-WMShortcuts {
     }
 
     $sep = ("  {0}{1}{2}  " -f $c.Border, $g.Dot, $c.Reset)
-    Write-Host ("  " + ($parts -join $sep) + $c.ClearLine)
+    $joined = $parts -join $sep
+
+    $plain = $joined -replace "\x1B\[[0-9;]*[a-zA-Z]", ""
+    $consoleWidth = Get-WMConsoleWidth
+    $pad = [math]::Max(2, [int][math]::Floor(($consoleWidth - $plain.Length) / 2))
+    $margin = " " * $pad
+
+    Write-Host ($margin + $joined + $c.ClearLine)
 }
 
 function Write-WMSuccess {
-    param([string]$Message)
+    param([string]$Message, [int]$Width = 76)
     $c = $global:WM_Color
     $g = $global:WM_Glyphs
-    Write-Host ("  {0}{1}{2} {3}{4}{2}" -f $c.Success, $g.Check, $c.Reset, $c.Text, $Message)
+    $margin = Get-WMMargin -ContentWidth $Width
+    Write-Host ("{0}{1}{2}{3} {4}{5}{3}" -f $margin, $c.Success, $g.Check, $c.Reset, $c.Text, $Message)
 }
 
 function Write-WMWarning {
-    param([string]$Message)
+    param([string]$Message, [int]$Width = 76)
     $c = $global:WM_Color
     $g = $global:WM_Glyphs
-    Write-Host ("  {0}{1}{2} {3}{4}{2}" -f $c.Warning, $g.Warn, $c.Reset, $c.Secondary, $Message)
+    $margin = Get-WMMargin -ContentWidth $Width
+    Write-Host ("{0}{1}{2}{3} {4}{5}{3}" -f $margin, $c.Warning, $g.Warn, $c.Reset, $c.Secondary, $Message)
 }
 
 function Write-WMError {
-    param([string]$Message)
+    param([string]$Message, [int]$Width = 76)
     $c = $global:WM_Color
     $g = $global:WM_Glyphs
-    Write-Host ("  {0}{1}{2} {3}{4}{2}" -f $c.Danger, $g.Cross, $c.Reset, $c.Text, $Message)
+    $margin = Get-WMMargin -ContentWidth $Width
+    Write-Host ("{0}{1}{2}{3} {4}{5}{3}" -f $margin, $c.Danger, $g.Cross, $c.Reset, $c.Text, $Message)
 }
 
 function Write-WMInfo {
-    param([string]$Message)
+    param([string]$Message, [int]$Width = 76)
     $c = $global:WM_Color
     $g = $global:WM_Glyphs
-    Write-Host ("  {0}{1}{2} {3}{4}{2}" -f $c.Secondary, $g.Arrow, $c.Reset, $c.Secondary, $Message)
+    $margin = Get-WMMargin -ContentWidth $Width
+    Write-Host ("{0}{1}{2}{3} {4}{5}{3}" -f $margin, $c.Secondary, $g.Arrow, $c.Reset, $c.Secondary, $Message)
 }
