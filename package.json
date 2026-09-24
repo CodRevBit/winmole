@@ -1,0 +1,49 @@
+{
+  "name": "winmole",
+  "version": "1.0.0",
+  "description": "Unified Windows Terminal Maintenance & Monitoring Toolkit",
+  "main": "bin/winmole.js",
+  "bin": {
+    "winmole": "bin/winmole.js",
+    "mo": "bin/winmole.js"
+  },
+  "os": [
+    "win32"
+  ],
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "scripts": {
+    "test": "powershell -NoProfile -ExecutionPolicy Bypass -Command \"Invoke-Pester .\\tests\\WinMole.Tests.ps1\""
+  },
+  "keywords": [
+    "windows",
+    "terminal",
+    "cli",
+    "maintenance",
+    "system-monitor",
+    "cleaner",
+    "purge",
+    "tui",
+    "powershell"
+  ],
+  "author": "CodRevBit",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CodRevBit/winmole.git"
+  },
+  "bugs": {
+    "url": "https://github.com/CodRevBit/winmole/issues"
+  },
+  "homepage": "https://github.com/CodRevBit/winmole#readme",
+  "files": [
+    "bin",
+    "src",
+    "winmole.ps1",
+    "install.ps1",
+    "uninstall.ps1",
+    "README.md",
+    "LICENSE"
+  ]
+}

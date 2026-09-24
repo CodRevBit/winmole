@@ -19,19 +19,37 @@ Instead of heavy electron apps or slow graphic interfaces, WinMole executes **10
 
 ## Quick Installation
 
-Run the 1-click installer from an elevated or standard PowerShell terminal:
+### Method 1: Install via npm / npx
+```bash
+# Run immediately without installing:
+npx winmole
 
+# Or install globally:
+npm install -g winmole
+```
+
+### Method 2: Install via uv / uvx (Python)
+```bash
+# Run immediately via uvx:
+uvx --from git+https://github.com/CodRevBit/winmole.git winmole
+
+# Or install as a permanent standalone tool:
+uv tool install git+https://github.com/CodRevBit/winmole.git
+```
+
+### Method 3: 1-Line PowerShell Web Installer
 ```powershell
+irm https://raw.githubusercontent.com/CodRevBit/winmole/master/install.ps1 | iex
+```
+
+### Method 4: Clone & Local Install
+```powershell
+git clone https://github.com/CodRevBit/winmole.git
+cd winmole
 .\install.ps1
 ```
 
-The installer will:
-1. Copy WinMole to `~/.winmole`
-2. Add `~/.winmole/bin` to your User `PATH` (enabling `mo` and `winmole` in CMD and PowerShell)
-3. Register CLI function hooks inside your PowerShell `$PROFILE`
-4. Ensure your `ExecutionPolicy` allows local scripts
-
-To remove WinMole:
+To uninstall WinMole at any time:
 ```powershell
 .\uninstall.ps1
 ```

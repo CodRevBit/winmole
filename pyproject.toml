@@ -1,0 +1,52 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "winmole"
+version = "1.0.0"
+description = "Unified Windows Terminal Maintenance & Monitoring Toolkit"
+readme = "README.md"
+requires-python = ">=3.8"
+license = "MIT"
+authors = [
+    { name = "CodRevBit" }
+]
+keywords = ["windows", "terminal", "cli", "maintenance", "system-monitor", "cleaner", "purge"]
+classifiers = [
+    "Environment :: Console",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python :: 3",
+    "Topic :: System :: Monitoring",
+    "Topic :: System :: Systems Administration",
+]
+
+[project.urls]
+Homepage = "https://github.com/CodRevBit/winmole"
+Repository = "https://github.com/CodRevBit/winmole"
+Issues = "https://github.com/CodRevBit/winmole/issues"
+
+[project.scripts]
+winmole = "winmole_cli:main"
+mo = "winmole_cli:main"
+
+[tool.hatch.build.targets.wheel.force-include]
+"winmole_cli.py" = "winmole_cli.py"
+"winmole.ps1" = "winmole.ps1"
+"install.ps1" = "install.ps1"
+"uninstall.ps1" = "uninstall.ps1"
+"bin" = "bin"
+"src" = "src"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src",
+    "/bin",
+    "/winmole.ps1",
+    "/install.ps1",
+    "/uninstall.ps1",
+    "/winmole_cli.py",
+    "/pyproject.toml",
+    "/README.md",
+    "/LICENSE",
+]
