@@ -73,3 +73,7 @@ TestResults/
 *.user
 *.userosscache
 *.sln.docstates
+
+# Pre-vibecoding specifications and documentation
+docs/
+
