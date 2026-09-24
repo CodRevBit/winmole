@@ -2,7 +2,7 @@
 
 # WinMole 🐾
 
-*Clean, purge, analyze, and monitor your Windows PC — 100% inside your terminal.*
+_Clean, purge, analyze, and monitor your Windows PC — 100% inside your terminal._
 
 [![Latest Release](https://img.shields.io/github/v/release/CodRevBit/winmole?style=flat-square&color=blue)](https://github.com/CodRevBit/winmole/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
@@ -216,71 +216,106 @@ Inspects your terminal capabilities, execution policies, UAC privilege levels, a
 
 ## System Architecture
 
-WinMole is built on a modular, multi-tier architecture designed for instantaneous startup (< 80ms) and zero mandatory external dependencies.
+After installation, WinMole lives entirely inside your user directory at `~/.winmole` (`C:\Users\<user>\.winmole`). It operates as a self-contained, modular toolkit with instant startup (< 80ms), zero background services, zero telemetry, and zero mandatory external dependencies.
+
+### 1. Installed Layout & System Wiring
+
+When you install WinMole (via the 1-line PowerShell installer, `npm`, or `uv`), it creates a clean, isolated footprint in your home directory and hooks into your terminal environment:
 
 ```
-                              USER INVOCATION
-      ┌───────────────────────────────────────────────────────────────┐
-      │  winmole (CMD)  │  winmole (PWSH) │  npx winmole │  uvx winmole│
-      └───────┬─────────────────┬────────────────┬───────────────┬────┘
-              │                 │                │               │
-              ▼                 ▼                ▼               ▼
-      [bin/winmole.cmd]  [$PROFILE Hook]  [bin/winmole.js] [winmole_cli.py]
-              │                 │                │               │
-              └─────────────────┴───────┬────────┴───────────────┘
-                                        │
-                                        ▼
-                        ┌───────────────────────────────┐
-                        │      winmole.ps1 Entrypoint   │
-                        │    (Dispatcher & Argument)    │
-                        └───────────────┬───────────────┘
-                                        │
-                   ┌────────────────────┴────────────────────┐
-                   ▼                                         ▼
-        ┌─────────────────────┐                   ┌─────────────────────┐
-        │   Core Subsystems   │                   │ Interactive UI/TUI  │
-        ├─────────────────────┤                   ├─────────────────────┤
-        │ • Config.ps1        │                   │ • UI.ps1 (ANSI/VT)  │
-        │ • Resolver.ps1      │                   │ • Menu.ps1 (Arrow)  │
-        └──────────┬──────────┘                   └──────────┬──────────┘
-                   │                                         │
-                   └────────────────────┬────────────────────┘
-                                        │
-         ┌───────────────┬──────────────┼──────────────┬──────────────┐
-         ▼               ▼              ▼              ▼              ▼
+~/.winmole/                          # WinMole Root Installation Directory
+├── bin/                             # Added to User PATH environment variable
+│   ├── winmole.cmd                  # Global CMD / terminal shim
+│   └── mo.cmd                       # Short alias shim ('mo <command>')
+├── winmole.ps1                      # Central execution dispatcher
+├── config.json                      # User preferences & threshold configurations
+├── targets.json                     # Search patterns for artifact and cache cleaning
+├── history.jsonl                    # Immutable JSON Lines audit log
+└── src/
+    ├── Core/
+    │   ├── Config.ps1               # State manager & schema initializer
+    │   ├── DependencyResolver.ps1   # Probes PATH for external TUI tools
+    │   ├── Menu.ps1                 # Interactive arrow-key console menu
+    │   └── UI.ps1                   # VT100 / ANSI TrueColor rendering engine
+    └── Commands/
+        ├── Status.ps1               # Live hardware monitor (CPU, RAM, Disk)
+        ├── Analyze.ps1              # Interactive disk usage explorer
+        ├── Purge.ps1                # Developer build artifact cleaner
+        ├── Clean.ps1                # System & user temp cache cleaner
+        ├── Uninstall.ps1            # App uninstaller wrapper via winget
+        └── Doctor.ps1               # Environment & diagnostic matrix
+```
+
+#### Shell Integration
+
+- **PowerShell `$PROFILE` Hook**: WinMole adds lightweight in-process functions (`winmole` and `mo`) directly to your PowerShell profile. When invoked, it calls `~/.winmole/winmole.ps1` in-process with sub-millisecond execution overhead.
+- **User `PATH`**: The `~/.winmole/bin` directory is added to your User `PATH`, making `winmole` and `mo` accessible from any shell (CMD, Windows Terminal, Git Bash, Nushell).
+
+---
+
+### 2. Internal Execution Architecture
+
+When you type `winmole` (or `mo`), the internal modules inside `~/.winmole` coordinate across four core layers:
+
+```
+                      User types: 'winmole [command]'
+                                     │
+         ┌───────────────┬───────────┴───┬───────────────┬──────────────┐
+         ▼               ▼               ▼               ▼              ▼
   ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌────────────┐ ┌────────────┐
   │   Status    │ │   Analyze   │ │    Purge    │ │   Clean    │ │  Doctor    │
   ├─────────────┤ ├─────────────┤ ├─────────────┤ ├────────────┤ ├────────────┤
-  │ bottom/btop │ │ gdu/dua-cli │ │    kondo    │ │  BleachBit │ │ Diagnostic │
-  │      ▼      │ │      ▼      │ │      ▼      │ │     ▼      │ │   Engine   │
-  │ Native CIM  │ │ Native .NET │ │ Native Scan │ │ Pure PS    │ │ (Built-in) │
-  │  (Fallback) │ │  (Fallback) │ │  (Fallback) │ │ Cleaner    │ │            │
+  │ bottom/btm  │ │ gdu/dua-cli │ │    kondo    │ │ Built-in   │ │ Health &   │
+  │     OR      │ │     OR      │ │     OR      │ │ Multi-Temp │ │ System     │
+  │ CIM Poller  │ │ .NET Engine │ │ Native Scan │ │ Cleaner    │ │ Diagnostic │
   └─────────────┘ └─────────────┘ └─────────────┘ └────────────┘ └────────────┘
-         │               │              │              │              │
-         └───────────────┴──────────────┼──────────────┴──────────────┘
-                                        │
-                                        ▼
-                      ┌───────────────────────────────────┐
-                      │    State & Configuration Layer    │
-                      │       (~/.winmole/ Directory)     │
-                      ├───────────────────────────────────┤
-                      │ • config.json   (User settings)   │
-                      │ • targets.json  (Purge patterns)  │
-                      │ • history.jsonl (Audit trail)     │
-                      └───────────────────────────────────┘
+         │               │               │               │              │
+         └───────────────┴───────────────┼───────────────┴──────────────┘
+                                         ▼
+                         ┌───────────────────────────────┐
+                         │   src/Core/UI & Menu Engine   │
+                         │   • VT100 / ANSI TrueColor    │
+                         │   • Arrow-key interactive TUI │
+                         │   • Formatted summary tables  │
+                         └───────────────────────────────┘
 ```
 
-### Subsystem Breakdown
+---
 
-| Subsystem | Source Path | Responsibility |
-|:---|:---|:---|
-| **CLI Wrappers** | `bin/winmole.cmd`, `bin/winmole.js`, `winmole_cli.py` | Cross-shell shims supporting CMD, PowerShell, npm/npx, and uv/Python. |
-| **Dispatcher** | `winmole.ps1` | Argument parsing, flag normalization, route execution, safety root checks. |
-| **Configuration** | `src/Core/Config.ps1` | Manages `~/.winmole/` configs, default schemas, and immutable JSONL audit trails. |
-| **Terminal UI** | `src/Core/UI.ps1` | VT100 / ANSI TrueColor rendering, rounded borders, progress bars, auto-fallback to 16 colors. |
-| **Menu Engine** | `src/Core/Menu.ps1` | Flicker-free interactive console menu with arrow-key and numeric input loops. |
-| **Dependency Resolver** | `src/Core/DependencyResolver.ps1` | Probes system PATH for external TUI binaries; routes to winget installer or native fallbacks. |
-| **Subcommand Engines** | `src/Commands/*.ps1` | Modular implementations for `status`, `analyze`, `purge`, `clean`, `uninstall`, and `doctor`. |
+### 3. How It Works Inside After Installation
+
+Here is the exact internal sequence executed inside `~/.winmole` whenever a command is run:
+
+1. **Dispatcher Routing (`winmole.ps1`)**:
+   - The central entrypoint normalizes passed arguments and flags (`--dry-run`, `--all`, `--non-interactive`).
+   - If invoked with no arguments, it routes immediately to the interactive dashboard (`src/Core/Menu.ps1`).
+   - If invoked with a subcommand (e.g. `winmole clean`), it loads only the required command module from `src/Commands/` to guarantee sub-millisecond execution.
+2. **State & Profile Hydration (`src/Core/Config.ps1`)**:
+   - WinMole reads your configuration from `~/.winmole/config.json` (thresholds, default dry-run preference) and target patterns from `targets.json`.
+   - Missing files are auto-generated from internal default schemas without crashing or requiring manual setup.
+3. **Dynamic Dependency Resolution (`src/Core/DependencyResolver.ps1`)**:
+   - For subcommands that benefit from dedicated TUI performance (`status`, `analyze`, `purge`, `uninstall`), WinMole probes the system `PATH`:
+     - **External tool detected**: If `bottom`, `gdu`, `kondo`, or `winget` is present, WinMole delegates directly to the binary for peak speed.
+     - **External tool absent**: WinMole automatically and silently activates its built-in native PowerShell/.NET fallback engine. There are no mandatory downloads or broken commands.
+4. **Safety & Guardrail Gate**:
+   - Before executing file operations, paths are validated against protected system root directories (`C:\`, `C:\Windows`, `C:\Program Files`, `C:\Users`).
+   - If `--dry-run` is active, the engine scans and calculates recoverable bytes without modifying or deleting any files on disk.
+   - Every completed operation appends a structured record (timestamp, duration, reclaimed bytes, errors) to `~/.winmole/history.jsonl`.
+5. **Terminal UI Rendering (`src/Core/UI.ps1`)**:
+   - Renders output using standard VT100 ANSI escape sequences, rounded Unicode borders, and TrueColor gradients. It automatically degrades gracefully to 16-color ANSI on legacy console hosts.
+
+---
+
+### 4. Subsystem Reference
+
+| Subsystem File          | Location Inside `~/.winmole/`     | Internal Role & Functionality                                                                     |
+| :---------------------- | :-------------------------------- | :------------------------------------------------------------------------------------------------ |
+| **Dispatcher**          | `winmole.ps1`                     | Central entrypoint; parses parameters, sets output encoding, and dispatches tasks.                |
+| **Config Engine**       | `src/Core/Config.ps1`             | Loads, saves, and updates `config.json`, `targets.json`, and records to `history.jsonl`.          |
+| **Dependency Resolver** | `src/Core/DependencyResolver.ps1` | PATH detection for external binaries (`btm`, `gdu`, `kondo`, `winget`) and fallback routing.      |
+| **UI Engine**           | `src/Core/UI.ps1`                 | ANSI TrueColor rendering, rounded card frames, progress bars, and formatted status badges.        |
+| **Menu Engine**         | `src/Core/Menu.ps1`               | Interactive, flicker-free terminal dashboard with arrow-key navigation and live hardware metrics. |
+| **Command Modules**     | `src/Commands/*.ps1`              | Dedicated implementations for `Status`, `Analyze`, `Purge`, `Clean`, `Uninstall`, and `Doctor`.   |
 
 ---
 
@@ -288,15 +323,15 @@ WinMole is built on a modular, multi-tier architecture designed for instantaneou
 
 WinMole seamlessly bridges external high-performance binaries with zero-dependency native PowerShell fallbacks:
 
-| Command | Action | Primary Binary | Automatic Install | Built-In Native Fallback |
-|:---|:---|:---|:---|:---|
-| `winmole` | Interactive Dashboard | Built-in | None (Native) | Arrow-key ANSI terminal menu |
-| `winmole status` | Live Hardware Monitor | `bottom` (`btm`) / `btop` | `winget install Clement.bottom` | Live polling loop (`Win32_Processor`, `Win32_OperatingSystem`) |
-| `winmole analyze` | Interactive Disk Explorer | `gdu` / `dua-cli` | `winget install gdu` | High-performance .NET directory size profiler |
-| `winmole purge` | Build Artifact Cleaner | `kondo` | `cargo install kondo` | Pure recursive scanner for `node_modules`, `target`, `.venv`, `bin/obj` |
-| `winmole clean` | Temp & Cache Cleaner | Curated Cleaner | None (Built-in) | Multi-target scanner for `%TEMP%`, crash dumps, system temp |
-| `winmole uninstall` | Package Uninstaller | `winget` | Windows 10/11 built-in | Filtered search & uninstall wrapper |
-| `winmole doctor` | Health & Tool Check | Diagnostic Engine | None (Built-in) | Environment overview, ANSI test, and tool matrix |
+| Command             | Action                    | Primary Binary            | Automatic Install               | Built-In Native Fallback                                                |
+| :------------------ | :------------------------ | :------------------------ | :------------------------------ | :---------------------------------------------------------------------- |
+| `winmole`           | Interactive Dashboard     | Built-in                  | None (Native)                   | Arrow-key ANSI terminal menu (ESC to fall back / exit)                  |
+| `winmole status`    | Live Hardware Monitor     | `bottom` (`btm`) / `btop` | `winget install Clement.bottom` | Live polling loop (`Win32_Processor`, `Win32_OperatingSystem`)          |
+| `winmole analyze`   | Interactive Disk Explorer | `gdu` / `dua-cli`         | `winget install gdu`            | High-performance .NET directory size profiler                           |
+| `winmole purge`     | Build Artifact Cleaner    | `kondo`                   | `cargo install kondo`           | Pure recursive scanner for `node_modules`, `target`, `.venv`, `bin/obj` |
+| `winmole clean`     | Temp & Cache Cleaner      | Curated Cleaner           | None (Built-in)                 | Multi-target scanner for `%TEMP%`, crash dumps, system temp             |
+| `winmole uninstall` | Package Uninstaller       | `winget`                  | Windows 10/11 built-in          | Filtered search & uninstall wrapper                                     |
+| `winmole doctor`    | Health & Tool Check       | Diagnostic Engine         | None (Built-in)                 | Environment overview, ANSI test, and tool matrix                        |
 
 ---
 
@@ -343,26 +378,15 @@ WinMole comes with a comprehensive [Pester](https://github.com/pester/Pester) au
 powershell -NoProfile -ExecutionPolicy Bypass -Command "Invoke-Pester .\tests\WinMole.Tests.ps1"
 ```
 
-All 11 unit tests verify:
+All 13 unit tests verify:
+
 - Configuration schema loading and path defaults
 - Root directory deletion protection guards
 - Dependency resolver detection and native fallback routing
+- Interactive menu rendering and ESC key fallback navigation
 - `--dry-run` simulation guarantees (zero file deletions)
 - Targeted build artifact purging and directory cleanup
 - CLI parameter routing, versioning, and help dispatching
-
----
-
-## Pre-Vibecoding Architectural Specifications
-
-WinMole was specified using mikenwo.ai's 6-document pre-vibecoding architecture:
-
-- [`01_PRD.md`](01_PRD.md) — Product Requirements Document
-- [`02_TRD.md`](02_TRD.md) — Technical Requirements Document
-- [`03_APPFLOW.md`](03_APPFLOW.md) — Appflow & Interactive Navigation Map
-- [`04_UI_UX_DESIGN.md`](04_UI_UX_DESIGN.md) — Terminal UI/UX Design Brief & Theme Spec
-- [`05_BACKEND_SCHEMA.md`](05_BACKEND_SCHEMA.md) — Local Schema, Config Specs & ER Model
-- [`06_IMPLEMENTATION_PLAN.md`](06_IMPLEMENTATION_PLAN.md) — 6-Phase Engineering Plan & QA Exit Gates
 
 ---
 

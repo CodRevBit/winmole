@@ -8,6 +8,7 @@ $WinMoleRoot = $ScriptDir
 . (Join-Path $WinMoleRoot "src\Core\Config.ps1")
 . (Join-Path $WinMoleRoot "src\Core\UI.ps1")
 . (Join-Path $WinMoleRoot "src\Core\DependencyResolver.ps1")
+. (Join-Path $WinMoleRoot "src\Core\Menu.ps1")
 . (Join-Path $WinMoleRoot "src\Commands\Purge.ps1")
 . (Join-Path $WinMoleRoot "src\Commands\Clean.ps1")
 . (Join-Path $WinMoleRoot "src\Commands\Status.ps1")
@@ -89,6 +90,17 @@ Describe "WinMole Purge Engine & Safety" {
 Describe "WinMole Clean Engine & Safety" {
     It "Executes Clean with --dry-run safely without errors" {
         { Invoke-WinMoleClean -DryRun -Force } | Should Not Throw
+    }
+}
+
+Describe "WinMole Interactive Menu & Fallback Navigation" {
+    It "Executes Wait-WMMenuFallback safely in non-interactive environment" {
+        $res = Wait-WMMenuFallback
+        $res | Should Be $true
+    }
+
+    It "Renders menu header and options when Show-WinMoleMenu is called non-interactively" {
+        { Show-WinMoleMenu } | Should Not Throw
     }
 }
 

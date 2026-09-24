@@ -106,15 +106,15 @@ function Invoke-WinMoleClean {
     $statusText = if ($DryRun) { "Simulation / Dry-Run (No files touched)" } else { "Scan Complete" }
     $sumLines = @(
         ("Status: {0}{1}{2}" -f $c.Text, $statusText, $c.Reset),
-        ("Eligible Files Found: {0}{1:N0} files{2} {3} Time: {4} ms" -f $c.Warning, $totalFiles, $c.Reset, $g.Bullet, $sw.ElapsedMilliseconds),
+        ("Eligible Files Found: {0}{1:N0} files{2}  {3}  Time: {4} ms" -f $c.Warning, $totalFiles, $c.Reset, $g.Dot, $sw.ElapsedMilliseconds),
         ("Total Reclaimable Space: {0}{1}{2}{3}" -f $c.Bold, $c.Success, (Format-WMBytes $totalReclaimableBytes), $c.Reset)
     )
-    Write-WMPanel -Title "Cleanup Summary" -Lines $sumLines -Width 65
+    Write-WMPanel -Title "Cleanup Summary" -Lines $sumLines -Width 67
 
-    $div = [string]::new($g.HLine, 65)
+    $div = [string]::new($g.HLine, 67)
     Write-Host ""
     Write-Host ("  {0}Target Category                        Files        Reclaimable Size{1}" -f $c.Muted, $c.Reset)
-    Write-Host ("  {0}{1}{2}" -f $c.Muted, $div, $c.Reset)
+    Write-Host ("  {0}{1}{2}" -f $c.Border, $div, $c.Reset)
 
     foreach ($r in $results) {
         $targetPadded = $r.Target.PadRight(38)

@@ -39,10 +39,10 @@ function Invoke-WinMoleDoctor {
         @{ Name = "winget"; Subcommand = "uninstall"; Binary = "winget"; Winget = "Windows App Installer"; Role = "Package Manager" }
     )
 
-    $div = [string]::new($g.HLine, 65)
+    $div = [string]::new($g.HLine, 63)
     $toolLines = @(
         ("{0}Tool Name            Role                        Status{1}" -f $c.Muted, $c.Reset),
-        ("{0}{1}{2}" -f $c.Muted, $div, $c.Reset)
+        ("{0}{1}{2}" -f $c.Border, $div, $c.Reset)
     )
 
     foreach ($t in $tools) {
@@ -50,9 +50,9 @@ function Invoke-WinMoleDoctor {
         $namePadded = $t.Name.PadRight(21)
         $rolePadded = $t.Role.PadRight(28)
         if ($found) {
-            $status = ("{0}{1} Installed{2}" -f $c.Success, $g.Check, $c.Reset)
+            $status = ("{0}{1} installed{2}" -f $c.Success, $g.Check, $c.Reset)
         } else {
-            $status = ("{0}[-] Missing (Fallback ready){1}" -f $c.Muted, $c.Reset)
+            $status = ("{0}{1} native fallback ready{2}" -f $c.Muted, $g.Arrow, $c.Reset)
         }
         $toolLines += ("{0}{1}{2}{3}{4}" -f $c.Text, $namePadded, $c.Secondary, $rolePadded, $status)
     }

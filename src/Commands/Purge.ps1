@@ -151,22 +151,22 @@ function Invoke-WinMoleNativePurge {
     Write-Host ""
     $summaryLines = @(
         ("Target Root: {0}{1}{2}" -f $c.Text, $TargetPath, $c.Reset),
-        ("Found: {0}{1} artifact directories{2} {3} Scan Time: {4} ms" -f $c.Warning, $foundArtifacts.Count, $c.Reset, $g.Bullet, $sw.ElapsedMilliseconds),
+        ("Found: {0}{1} artifact directories{2}  {3}  Scan Time: {4} ms" -f $c.Warning, $foundArtifacts.Count, $c.Reset, $g.Dot, $sw.ElapsedMilliseconds),
         ("Total Reclaimable Space: {0}{1}{2}{3}" -f $c.Bold, $c.Success, (Format-WMBytes $totalReclaimable), $c.Reset)
     )
-    Write-WMPanel -Title "Artifacts Detected" -Lines $summaryLines -Width 65
+    Write-WMPanel -Title "Artifacts Detected" -Lines $summaryLines -Width 67
 
-    $div = [string]::new($g.HLine, 65)
+    $div = [string]::new($g.HLine, 67)
     Write-Host ""
-    Write-Host ("  {0}Artifact Path                                      Type         Size{1}" -f $c.Muted, $c.Reset)
-    Write-Host ("  {0}{1}{2}" -f $c.Muted, $div, $c.Reset)
+    Write-Host ("  {0}Artifact Path                                        Type         Size{1}" -f $c.Muted, $c.Reset)
+    Write-Host ("  {0}{1}{2}" -f $c.Border, $div, $c.Reset)
 
     foreach ($item in $foundArtifacts) {
         $pathDisplay = $item.Path
-        if ($pathDisplay.Length -gt 45) {
-            $pathDisplay = "..." + $pathDisplay.Substring($pathDisplay.Length - 42)
+        if ($pathDisplay.Length -gt 47) {
+            $pathDisplay = "..." + $pathDisplay.Substring($pathDisplay.Length - 44)
         }
-        $pathPadded = $pathDisplay.PadRight(47)
+        $pathPadded = $pathDisplay.PadRight(49)
         $ecoPadded = $item.Ecosystem.PadRight(13)
         $sizePadded = Format-WMBytes $item.Size
         Write-Host ("  {0}{1}{2}{3}{4}{5}{6}" -f $c.Text, $pathPadded, $c.Secondary, $ecoPadded, $c.Success, $sizePadded, $c.Reset)

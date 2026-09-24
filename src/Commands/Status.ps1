@@ -3,22 +3,37 @@
 
 function Invoke-WinMoleStatus {
     param(
-        [switch]$Native
+        [switch]$Native,
+        [switch]$FromMenu
     )
 
     $resolution = Resolve-WinMoleTool -Subcommand "status" -PreferNative:$Native
-    if ($resolution.Mode -eq "cancel") { return }
+    if ($resolution.Mode -eq "cancel") { return "menu" }
 
     if ($resolution.Mode -eq "binary" -and $resolution.Binary) {
         & $resolution.Binary
-        return
+        if ($FromMenu) {
+            $fallback = Wait-WMMenuFallback
+            if (-not $fallback) { return "quit" }
+            return "menu"
+        }
+        return "quit"
     }
 
     # Native PowerShell live monitoring fallback
-    Invoke-WinMoleNativeStatus
+    $statusResult = Invoke-WinMoleNativeStatus -FromMenu:$FromMenu
+    if ($statusResult -eq "menu" -and -not $FromMenu) {
+        if (Get-Command Show-WinMoleMenu -ErrorAction SilentlyContinue) {
+            Show-WinMoleMenu
+        }
+    }
+    return $statusResult
 }
 
 function Invoke-WinMoleNativeStatus {
+    param(
+        [switch]$FromMenu
+    )
     $c = $global:WM_Color
     $g = $global:WM_Glyphs
     
@@ -28,12 +43,17 @@ function Invoke-WinMoleNativeStatus {
 
     Write-Host ("{0}{1}" -f $c.ClearScreen, $c.CursorHide) -NoNewline
 
+    $statusResult = "quit"
     try {
         while ($true) {
             # Check keypress without blocking
             if ([Console]::KeyAvailable) {
                 $key = [Console]::ReadKey($true)
-                if ($key.KeyChar -eq 'q' -or $key.Key -eq [ConsoleKey]::Escape) {
+                if ($key.Key -eq [ConsoleKey]::Escape) {
+                    $statusResult = "menu"
+                    break
+                } elseif ($key.KeyChar -eq 'q') {
+                    $statusResult = "quit"
                     break
                 }
             }
@@ -67,7 +87,7 @@ function Invoke-WinMoleNativeStatus {
             # Render Screen Buffer
             Write-Host ("{0}[H" -f $global:WM_ESC) -NoNewline
             Write-WMHeader -Title "WINMOLE STATUS" -Subtitle "Live Terminal Monitor"
-            Write-Host ("  {0}Press {1}[q]{0} or {1}[ESC]{0} to return to shell{2}" -f $c.Muted, $c.Warning, $c.Reset)
+            Write-WMShortcuts -Items @(@("esc", "menu"), @("q", "exit"), @("r", "refresh"))
             Write-Host ""
 
             # Panel 1: Hardware Summary
@@ -78,24 +98,24 @@ function Invoke-WinMoleNativeStatus {
                 ("Memory: {0}{1} / {2}{3}" -f $c.Text, (Format-WMBytes $usedRamBytes), (Format-WMBytes $totalRamBytes), $c.Reset),
                 ("     {0}" -f (Format-WMProgressBar -Percent $ramPct -Width 24)),
                 "",
-                ("System Uptime: {0}{1}{2} {3} OS: {4}{5}{2}" -f $c.Secondary, $uptimeStr, $c.Reset, $g.Bullet, $c.Text, $os.Caption)
+                ("System Uptime: {0}{1}{2}  {3}  OS: {4}{5}{2}" -f $c.Secondary, $uptimeStr, $c.Reset, $g.Dot, $c.Text, $os.Caption)
             )
-            Write-WMPanel -Title "Hardware Overview" -Lines $hwLines -Width 65
+            Write-WMPanel -Title "Hardware Overview" -Lines $hwLines -Width 67
 
             # Panel 2: Storage Drives
             $driveLines = @()
             foreach ($d in $drives) {
                 $totalDrive = $d.Used + $d.Free
                 $drivePct = if ($totalDrive -gt 0) { [math]::Round(($d.Used / $totalDrive) * 100, 1) } else { 0 }
-                $driveLines += ("Drive {0}{1}:{2}  {3}  {4} Free of {5}" -f $c.Bold, $d.Name, $c.Reset, (Format-WMProgressBar -Percent $drivePct -Width 18), (Format-WMBytes $d.Free), (Format-WMBytes $totalDrive))
+                $driveLines += ("Drive {0}{1}:{2}  {3}  {4} free of {5}" -f $c.Bold, $d.Name, $c.Reset, (Format-WMProgressBar -Percent $drivePct -Width 18), (Format-WMBytes $d.Free), (Format-WMBytes $totalDrive))
             }
-            Write-WMPanel -Title "Storage Drives" -Lines $driveLines -Width 65
+            Write-WMPanel -Title "Storage Drives" -Lines $driveLines -Width 67
 
             # Panel 3: Top Processes
-            $procDiv = [string]::new($g.HLine, 61)
+            $procDiv = [string]::new($g.HLine, 63)
             $procLines = @(
                 ("{0}PID       Process Name                    Memory        Handles{1}" -f $c.Muted, $c.Reset),
-                ("{0}{1}{2}" -f $c.Muted, $procDiv, $c.Reset)
+                ("{0}{1}{2}" -f $c.Border, $procDiv, $c.Reset)
             )
             foreach ($p in $topProcs) {
                 $pName = if ($p.ProcessName.Length -gt 28) { $p.ProcessName.Substring(0, 25) + "..." } else { $p.ProcessName }
@@ -104,7 +124,7 @@ function Invoke-WinMoleNativeStatus {
                 $memPadded = (Format-WMBytes $p.WorkingSet).PadRight(12)
                 $procLines += ("{0}{1}{2}{3}{4}{5}" -f $c.Text, $pidPadded, $pNamePadded, $memPadded, $p.Handles, $c.Reset)
             }
-            Write-WMPanel -Title "Top Processes by Memory" -Lines $procLines -Width 65
+            Write-WMPanel -Title "Top Processes by Memory" -Lines $procLines -Width 67
 
             Start-Sleep -Milliseconds 1000
         }
@@ -112,4 +132,5 @@ function Invoke-WinMoleNativeStatus {
         Write-Host ("{0}" -f $c.CursorShow) -NoNewline
         Write-Host ""
     }
+    return $statusResult
 }

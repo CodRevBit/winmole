@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     WinMole (mo) - Unified Windows Terminal Maintenance & Monitoring Toolkit.
 .DESCRIPTION
@@ -60,21 +60,23 @@ if ($Version -or $Subcommand -eq "--version" -or $Subcommand -eq "-v") {
 # Handle --help / -h / help
 if ($Help -or $Subcommand -eq "--help" -or $Subcommand -eq "-h" -or $Subcommand -eq "help") {
     $c = $global:WM_Color
-    Write-WMHeader -Title ("WINMOLE v{0}" -f $WinMoleVersion) -Subtitle "Windows Terminal Maintenance Toolkit"
+    $g = $global:WM_Glyphs
+
+    Write-WMLogo
     Write-Host ""
-    Write-Host ("  {0}USAGE:{1}" -f $c.Bold, $c.Reset)
+    Write-Host ("  {0}USAGE:{1}" -f $c.Primary, $c.Reset)
     Write-Host "    winmole [command] [options]"
     Write-Host ""
-    Write-Host ("  {0}COMMANDS:{1}" -f $c.Bold, $c.Reset)
-    Write-Host ("    {0}status{1}               Live system monitor (CPU, RAM, Disk, Procs) [bottom/btop]" -f $c.Primary, $c.Reset)
-    Write-Host ("    {0}analyze{1} [path]        Interactive disk usage visualizer [gdu/dua]" -f $c.Primary, $c.Reset)
-    Write-Host ("    {0}purge{1}   [path]        Developer build artifact cleaner (node_modules, target,...)" -f $c.Primary, $c.Reset)
-    Write-Host ("    {0}clean{1}                 System temp, crash dump and cache cleaner" -f $c.Primary, $c.Reset)
-    Write-Host ("    {0}uninstall{1} [app]       Interactive package and application uninstaller [winget]" -f $c.Primary, $c.Reset)
-    Write-Host ("    {0}doctor{1}                System and external tool health diagnostic report" -f $c.Primary, $c.Reset)
-    Write-Host ("    {0}(none){1}                Launch interactive keyboard-navigable terminal menu" -f $c.Primary, $c.Reset)
+    Write-Host ("  {0}COMMANDS:{1}" -f $c.Primary, $c.Reset)
+    Write-Host ("    {0}status{1}               Live system monitor (CPU, RAM, Disk, Procs) [bottom/btop]" -f $c.Text, $c.Reset)
+    Write-Host ("    {0}analyze{1} [path]        Interactive disk usage visualizer [gdu/dua]" -f $c.Text, $c.Reset)
+    Write-Host ("    {0}purge{1}   [path]        Developer build artifact cleaner (node_modules, target,...)" -f $c.Text, $c.Reset)
+    Write-Host ("    {0}clean{1}                 System temp, crash dump and cache cleaner" -f $c.Text, $c.Reset)
+    Write-Host ("    {0}uninstall{1} [app]       Interactive package and application uninstaller [winget]" -f $c.Text, $c.Reset)
+    Write-Host ("    {0}doctor{1}                System and external tool health diagnostic report" -f $c.Text, $c.Reset)
+    Write-Host ("    {0}(none){1}                Launch interactive keyboard-navigable terminal menu" -f $c.Muted, $c.Reset)
     Write-Host ""
-    Write-Host ("  {0}OPTIONS:{1}" -f $c.Bold, $c.Reset)
+    Write-Host ("  {0}OPTIONS:{1}" -f $c.Primary, $c.Reset)
     Write-Host ("    {0}--dry-run{1}           Preview files and space without making modifications" -f $c.Secondary, $c.Reset)
     Write-Host ("    {0}--force{1}             Bypass confirmation prompts for automated runs" -f $c.Secondary, $c.Reset)
     Write-Host ("    {0}--all{1}               Include all optional target caches (clean command)" -f $c.Secondary, $c.Reset)
@@ -82,14 +84,14 @@ if ($Help -or $Subcommand -eq "--help" -or $Subcommand -eq "-h" -or $Subcommand 
     Write-Host ("    {0}-h, --help{1}          Display this help manual" -f $c.Secondary, $c.Reset)
     Write-Host ("    {0}-v, --version{1}       Display WinMole version information" -f $c.Secondary, $c.Reset)
     Write-Host ""
-    Write-Host ("  {0}EXAMPLES:{1}" -f $c.Bold, $c.Reset)
-    Write-Host "    winmole                        # Open interactive menu"
-    Write-Host "    winmole status                 # Launch live terminal monitor"
-    Write-Host "    winmole analyze C:\Projects    # Profile disk space"
-    Write-Host "    winmole purge --dry-run        # Scan project build junk without deleting"
-    Write-Host "    winmole clean                  # Clean %TEMP% and crash dumps"
-    Write-Host "    winmole uninstall vlc          # Uninstall application via winget"
-    Write-Host "    winmole doctor                 # Run environment diagnostics"
+    Write-Host ("  {0}EXAMPLES:{1}" -f $c.Primary, $c.Reset)
+    Write-Host ("    {0}winmole{1}                        {2}# Open interactive menu{1}" -f $c.Text, $c.Reset, $c.Muted)
+    Write-Host ("    {0}winmole status{1}                 {2}# Launch live terminal monitor{1}" -f $c.Text, $c.Reset, $c.Muted)
+    Write-Host ("    {0}winmole analyze C:\Projects{1}    {2}# Profile disk space{1}" -f $c.Text, $c.Reset, $c.Muted)
+    Write-Host ("    {0}winmole purge --dry-run{1}        {2}# Scan project build junk without deleting{1}" -f $c.Text, $c.Reset, $c.Muted)
+    Write-Host ("    {0}winmole clean{1}                  {2}# Clean %TEMP% and crash dumps{1}" -f $c.Text, $c.Reset, $c.Muted)
+    Write-Host ("    {0}winmole uninstall vlc{1}          {2}# Uninstall application via winget{1}" -f $c.Text, $c.Reset, $c.Muted)
+    Write-Host ("    {0}winmole doctor{1}                 {2}# Run environment diagnostics{1}" -f $c.Text, $c.Reset, $c.Muted)
     Write-Host ""
     exit 0
 }

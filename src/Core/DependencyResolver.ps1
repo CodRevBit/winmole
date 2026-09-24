@@ -104,11 +104,30 @@ function Resolve-WinMoleTool {
         Write-Host "  $($c.Primary)[1]$($c.Reset) Attempt install via: $($toolSpec.InstallCmd)"
     }
     Write-Host "  $($c.Success)[2]$($c.Reset) Run built-in native PowerShell fallback $($c.Muted)(instant, zero install)$($c.Reset)"
-    Write-Host "  $($c.Muted)[3]$($c.Reset) Cancel"
+    Write-Host "  $($c.Muted)[3]$($c.Reset) Cancel $($c.Muted)(or press ESC)$($c.Reset)"
     Write-Host ""
 
-    $choice = Read-Host "  Select option [1-3, default 2]"
-    if ([string]::IsNullOrWhiteSpace($choice)) { $choice = "2" }
+    $choice = "2"
+    if ([Environment]::UserInteractive -and -not [Console]::IsInputRedirected) {
+        Write-Host "  Select option [1-3, default 2, ESC to cancel]: " -NoNewline
+        $key = [Console]::ReadKey($true)
+        if ($key.Key -eq [ConsoleKey]::Escape -or $key.KeyChar -eq 'q') {
+            $choice = "3"
+            Write-Host "Cancel"
+        } elseif ($key.Key -eq [ConsoleKey]::Enter) {
+            $choice = "2"
+            Write-Host "2"
+        } elseif ($key.KeyChar -ge '1' -and $key.KeyChar -le '3') {
+            $choice = $key.KeyChar.ToString()
+            Write-Host $choice
+        } else {
+            $choice = "2"
+            Write-Host "2"
+        }
+    } else {
+        $choice = Read-Host "  Select option [1-3, default 2]"
+        if ([string]::IsNullOrWhiteSpace($choice)) { $choice = "2" }
+    }
 
     if ($choice -eq "1") {
         if ($toolSpec.WingetId) {
