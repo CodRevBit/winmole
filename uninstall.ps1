@@ -16,9 +16,11 @@ $cMuted   = "$ESC[38;2;100;116;139m"
 $cBold    = "$ESC[1m"
 $cReset   = "$ESC[0m"
 
+$divider = [string]::new([char]45, 61)
+
 Write-Host ""
 Write-Host ("{0}{1}WINMOLE UNINSTALLER{2}" -f $cDanger, $cBold, $cReset)
-Write-Host ("{0}─────────────────────────────────────────────────────────────{1}" -f $cMuted, $cReset)
+Write-Host ("{0}{1}{2}" -f $cMuted, $divider, $cReset)
 Write-Host ""
 
 $confirm = Read-Host "Are you sure you want to completely uninstall WinMole? [y/N]"
@@ -32,10 +34,12 @@ $BinDir = Join-Path $TargetDir "bin"
 
 # 1. Remove from User PATH
 $userPath = [Environment]::GetEnvironmentVariable("Path", "User")
-$pathList = ($userPath -split ";") | Where-Object { $_ -ne "" -and $_ -ne $BinDir }
-$newPath = $pathList -join ";"
-[Environment]::SetEnvironmentVariable("Path", $newPath, "User")
-Write-Host ("{0}✔ Removed WinMole from User PATH.{1}" -f $cSuccess, $cReset)
+if ($userPath) {
+    $pathList = ($userPath -split ";") | Where-Object { $_ -ne "" -and $_ -ne $BinDir }
+    $newPath = $pathList -join ";"
+    [Environment]::SetEnvironmentVariable("Path", $newPath, "User")
+    Write-Host ("{0}[OK] Removed WinMole from User PATH.{1}" -f $cSuccess, $cReset)
+}
 
 # 2. Clean PowerShell $PROFILE Hook
 if ($PROFILE -and (Test-Path $PROFILE)) {
@@ -55,18 +59,18 @@ if ($PROFILE -and (Test-Path $PROFILE)) {
             $cleaned += $line
         }
         [System.IO.File]::WriteAllLines($PROFILE, $cleaned, [System.Text.Encoding]::UTF8)
-        Write-Host ("{0}✔ Removed hook from PowerShell profile.{1}" -f $cSuccess, $cReset)
+        Write-Host ("{0}[OK] Removed hook from PowerShell profile.{1}" -f $cSuccess, $cReset)
     } catch {
-        Write-Host ("{0}▲ Warning: Could not clean profile file: {1}{2}" -f $cWarning, $_.Exception.Message, $cReset)
+        Write-Host ("{0}[!] Warning: Could not clean profile file: {1}{2}" -f $cWarning, $_.Exception.Message, $cReset)
     }
 }
 
 # 3. Remove .winmole folder
 if (Test-Path $TargetDir) {
     Remove-Item -Path $TargetDir -Recurse -Force
-    Write-Host ("{0}✔ Removed {1} directory.{2}" -f $cSuccess, $TargetDir, $cReset)
+    Write-Host ("{0}[OK] Removed {1} directory.{2}" -f $cSuccess, $TargetDir, $cReset)
 }
 
 Write-Host ""
-Write-Host ("{0}✔ WinMole has been completely removed from your system.{1}" -f $cSuccess, $cReset)
+Write-Host ("{0}[OK] WinMole has been completely removed from your system.{1}" -f $cSuccess, $cReset)
 Write-Host ""

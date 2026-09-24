@@ -16,9 +16,11 @@ $cMuted   = "$ESC[38;2;100;116;139m"
 $cBold    = "$ESC[1m"
 $cReset   = "$ESC[0m"
 
+$divider = [string]::new([char]45, 61)
+
 Write-Host ""
-Write-Host ("{0}{1}WINMOLE INSTALLER{2} {3}•{2} Windows Terminal Maintenance Toolkit" -f $cPrimary, $cBold, $cReset, $cMuted)
-Write-Host ("{0}─────────────────────────────────────────────────────────────{1}" -f $cMuted, $cReset)
+Write-Host ("{0}{1}WINMOLE INSTALLER{2} {3}* {2}Windows Terminal Maintenance Toolkit" -f $cPrimary, $cBold, $cReset, $cMuted)
+Write-Host ("{0}{1}{2}" -f $cMuted, $divider, $cReset)
 Write-Host ""
 
 $SourceDir = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -33,7 +35,7 @@ try {
         Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned -Force
     }
 } catch {
-    Write-Host ("{0}▲ Warning: Could not adjust execution policy automatically.{1}" -f $cWarning, $cReset)
+    Write-Host ("{0}[!] Warning: Could not adjust execution policy automatically.{1}" -f $cWarning, $cReset)
 }
 
 # 2. Create Target Directories
@@ -53,6 +55,7 @@ Copy-Item -Path (Join-Path $SourceDir "src") -Destination $TargetDir -Force -Rec
 
 # 4. Add bin to User PATH
 $userPath = [Environment]::GetEnvironmentVariable("Path", "User")
+if (-not $userPath) { $userPath = "" }
 $pathList = ($userPath -split ";") | Where-Object { $_ -ne "" }
 
 if ($pathList -notcontains $BinDir) {
@@ -60,9 +63,9 @@ if ($pathList -notcontains $BinDir) {
     $newPath = $userPath.TrimEnd(';') + ";" + $BinDir
     [Environment]::SetEnvironmentVariable("Path", $newPath, "User")
     $env:PATH = "$env:PATH;$BinDir"
-    Write-Host ("{0}✔ User PATH updated successfully.{1}" -f $cSuccess, $cReset)
+    Write-Host ("{0}[OK] User PATH updated successfully.{1}" -f $cSuccess, $cReset)
 } else {
-    Write-Host ("{0}✔ User PATH already contains WinMole bin directory.{1}" -f $cSuccess, $cReset)
+    Write-Host ("{0}[OK] User PATH already contains WinMole bin directory.{1}" -f $cSuccess, $cReset)
 }
 
 # 5. Register in PowerShell $PROFILE
@@ -81,28 +84,17 @@ if ($PROFILE) {
     } catch {}
 
     $hookMarker = "# --- WinMole CLI Hook ---"
-    if ($profileContent -notmatch $hookMarker) {
-        $hookCode = @"
-
-# --- WinMole CLI Hook ---
-function global:mo { & "$TargetDir\winmole.ps1" @args }
-function global:winmole { & "$TargetDir\winmole.ps1" @args }
-"@
+    if ($profileContent -notmatch [regex]::Escape($hookMarker)) {
+        $hookCode = "`r`n# --- WinMole CLI Hook ---`r`nfunction global:mo { & `"$TargetDir\winmole.ps1`" @args }`r`nfunction global:winmole { & `"$TargetDir\winmole.ps1`" @args }`r`n"
         [System.IO.File]::AppendAllText($PROFILE, $hookCode, [System.Text.Encoding]::UTF8)
-        Write-Host ("{0}✔ PowerShell Profile hook registered in: {1}{2}" -f $cSuccess, $PROFILE, $cReset)
+        Write-Host ("{0}[OK] PowerShell Profile hook registered in: {1}{2}" -f $cSuccess, $PROFILE, $cReset)
     } else {
-        Write-Host ("{0}✔ PowerShell Profile hook already present.{1}" -f $cSuccess, $cReset)
+        Write-Host ("{0}[OK] PowerShell Profile hook already present.{1}" -f $cSuccess, $cReset)
     }
 }
 
 Write-Host ""
-Write-Host ("{0}✔ WinMole v1.0.0 installed successfully!{1}" -f $cSuccess, $cReset)
+Write-Host ("{0}[OK] WinMole v1.0.0 installed successfully!{1}" -f $cSuccess, $cReset)
 Write-Host ""
-Write-Host "  You can now run:"
-Write-Host ("    {0}mo{1}             - Open interactive terminal menu" -f $cPrimary, $cReset)
-Write-Host ("    {0}mo doctor{1}      - Verify diagnostic health and external tools" -f $cPrimary, $cReset)
-Write-Host ("    {0}mo status{1}      - Launch live hardware monitor" -f $cPrimary, $cReset)
-Write-Host ("    {0}mo clean{1}       - Clean %TEMP% and cache files" -f $cPrimary, $cReset)
-Write-Host ""
-Write-Host ("  {0}(Note: Restart your terminal or run '$env:PATH = [Environment]::GetEnvironmentVariable(''Path'',''User'')' to refresh PATH in this window){1}" -f $cMuted, $cReset)
+Write-Host ("  You can now run: {0}mo{1} or {0}winmole{1} from any terminal." -f $cPrimary, $cReset)
 Write-Host ""
