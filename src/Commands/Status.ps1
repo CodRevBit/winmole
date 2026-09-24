@@ -41,7 +41,8 @@ function Invoke-WinMoleNativeStatus {
     $cpuName = if ($cpuInfo.Name) { $cpuInfo.Name.Trim() } else { "Generic CPU" }
     $cpuDetails = "{0} Cores / {1} Threads" -f $cpuInfo.NumberOfCores, $cpuInfo.NumberOfLogicalProcessors
 
-    Write-Host ("{0}{1}" -f $c.ClearScreen, $c.CursorHide) -NoNewline
+    Clear-WMScreen
+    Write-Host ("{0}" -f $c.CursorHide) -NoNewline
 
     $statusResult = "quit"
     try {

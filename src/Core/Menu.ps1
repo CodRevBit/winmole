@@ -1,4 +1,4 @@
-﻿# WinMole Interactive Menu (Yoinks Design Language)
+# WinMole Interactive Menu (Yoinks Design Language)
 # Compatible with PowerShell 5.1 & PowerShell 7+
 
 function Wait-WMMenuFallback {
@@ -76,24 +76,25 @@ function Show-WinMoleMenu {
             $cpuPct = [math]::Round($cpuMetrics.Average)
         } catch {}
 
+        Clear-WMScreen
         Write-Host ("{0}" -f $c.CursorHide) -NoNewline
         $cmdToRun = $null
 
         try {
             while ($true) {
-                Write-Host ("{0}" -f $c.ClearScreen) -NoNewline
+                Move-WMCursorHome
 
                 # Yoinks block logo & tagline
                 Write-WMLogo
 
-                Write-Host ""
+                Write-Host ("{0}" -f $c.ClearLine)
 
                 # Yoinks-style Snapshot Panel
                 $snapWidth = 72
                 $snapLine = ("Host: {0}  {1}  CPU: {2}%  {1}  RAM: {3}/{4} GB ({5}%)  {1}  C: {6} GB free" -f $env:COMPUTERNAME, $g.Dot, $cpuPct, $usedRamGB, $totalRamGB, $ramPct, $cFreeGB)
                 Write-WMPanel -Title "Snapshot" -Lines @($snapLine) -Width $snapWidth
 
-                Write-Host ""
+                Write-Host ("{0}" -f $c.ClearLine)
 
                 # Yoinks-style Tasks Selection Panel
                 $taskLines = @()
@@ -111,7 +112,7 @@ function Show-WinMoleMenu {
 
                 Write-WMPanel -Title "Tasks" -Lines $taskLines -Width $snapWidth
 
-                Write-Host ""
+                Write-Host ("{0}" -f $c.ClearLine)
 
                 # Footer shortcuts
                 $shortcuts = @(

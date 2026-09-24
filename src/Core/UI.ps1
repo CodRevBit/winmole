@@ -65,6 +65,8 @@ if ($global:WM_HasVT) {
         Text         = "$($global:WM_ESC)[38;2;244;244;245m"   # Zinc 100
         BgHighlight  = "$($global:WM_ESC)[48;2;39;39;42m"     # Zinc 800 subtle card highlight
         ClearScreen  = "$($global:WM_ESC)[2J$($global:WM_ESC)[H"
+        CursorHome   = "$($global:WM_ESC)[H"
+        ClearLine    = "$($global:WM_ESC)[K"
         CursorHide   = "$($global:WM_ESC)[?25l"
         CursorShow   = "$($global:WM_ESC)[?25h"
     }
@@ -84,8 +86,34 @@ if ($global:WM_HasVT) {
         Text         = ""
         BgHighlight  = ""
         ClearScreen  = ""
+        CursorHome   = ""
+        ClearLine    = ""
         CursorHide   = ""
         CursorShow   = ""
+    }
+}
+
+function Clear-WMScreen {
+    try {
+        Clear-Host
+    } catch {
+        if ($global:WM_HasVT) {
+            Write-Host ("{0}[2J{0}[H" -f $global:WM_ESC) -NoNewline
+        }
+    }
+}
+
+function Move-WMCursorHome {
+    if ($global:WM_HasVT) {
+        Write-Host ("{0}[H" -f $global:WM_ESC) -NoNewline
+    } else {
+        try {
+            [Console]::SetCursorPosition(0, 0)
+        } catch {
+            try {
+                $Host.UI.RawUI.CursorPosition = New-Object System.Management.Automation.Host.Coordinates 0, 0
+            } catch {}
+        }
     }
 }
 
@@ -148,13 +176,12 @@ function Write-WMLogo {
     $row1 = -join @($b, ' ', $b, ' ', $b, '  ', $d, '  ', $b, ' ', $d, ' ', $b, ' ', $d, ' ', $b, ' ', $b, ' ', $d, ' ', $b, '   ', $b, $t, $t)
     $row2 = -join @(' ', $t, ' ', $t, '  ', $t, $t, $t, ' ', $t, ' ', $t, ' ', $t, '   ', $t, ' ', $t, $t, $t, ' ', $t, $t, $t, ' ', $t, $t, $t)
 
-    Write-Host ""
-    Write-Host ("  {0}{1}{2}" -f $c.Primary, $row0, $c.Reset)
-    Write-Host ("  {0}{1}{2}" -f $c.Primary, $row1, $c.Reset)
-    Write-Host ("  {0}{1}{2}" -f $c.Primary, $row2, $c.Reset)
-    Write-Host ""
-    Write-Host ("  {0}clean any junk. status. purge. done.{1}" -f $c.Primary, $c.Reset)
-    Write-Host ("  {0}temp {1} crash dumps {1} node_modules {1} target {1} .venv {1} winget{2}" -f $c.Muted, $g.Dot, $c.Reset)
+    Write-Host ("  {0}{1}{2}{3}" -f $c.Primary, $row0, $c.Reset, $c.ClearLine)
+    Write-Host ("  {0}{1}{2}{3}" -f $c.Primary, $row1, $c.Reset, $c.ClearLine)
+    Write-Host ("  {0}{1}{2}{3}" -f $c.Primary, $row2, $c.Reset, $c.ClearLine)
+    Write-Host ("{0}" -f $c.ClearLine)
+    Write-Host ("  {0}clean any junk. status. purge. done.{1}{2}" -f $c.Primary, $c.Reset, $c.ClearLine)
+    Write-Host ("  {0}temp {1} crash dumps {1} node_modules {1} target {1} .venv {1} winget{2}{3}" -f $c.Muted, $g.Dot, $c.Reset, $c.ClearLine)
 }
 
 function Write-WMHeader {
@@ -169,8 +196,8 @@ function Write-WMHeader {
     $divider = [string]::new($g.HLine, 65)
     
     Write-Host ""
-    Write-Host ("  {0}{1}{2}{3}{4}  {5}{6}{3}  {7}{8}{3}" -f $c.Primary, $c.Bold, $Title, $c.Reset, $adminTag, $c.Border, $g.Dot, $c.Secondary, $Subtitle)
-    Write-Host ("  {0}{1}{2}" -f $c.Border, $divider, $c.Reset)
+    Write-Host ("  {0}{1}{2}{3}{4}  {5}{6}{3}  {7}{8}{3}{9}" -f $c.Primary, $c.Bold, $Title, $c.Reset, $adminTag, $c.Border, $g.Dot, $c.Secondary, $Subtitle, $c.ClearLine)
+    Write-Host ("  {0}{1}{2}{3}" -f $c.Border, $divider, $c.Reset, $c.ClearLine)
 }
 
 function Write-WMPanel {
@@ -189,18 +216,18 @@ function Write-WMPanel {
     if ($tailLen -lt 1) { $tailLen = 1 }
     $tail = [string]::new($g.HLine, $tailLen)
 
-    Write-Host ("  {0}{1}{2}{3}{4}{5}{0}{6}{7}{3}" -f $c.Border, $g.TopL, $g.HLine, $c.Reset, $c.Primary, $titleStr, $tail, $g.TopR)
+    Write-Host ("  {0}{1}{2}{3}{4}{5}{0}{6}{7}{3}{8}" -f $c.Border, $g.TopL, $g.HLine, $c.Reset, $c.Primary, $titleStr, $tail, $g.TopR, $c.ClearLine)
     
     foreach ($item in $Lines) {
         $plain = $item -replace "\x1B\[[0-9;]*[a-zA-Z]", ""
         $pad = $Width - 4 - $plain.Length
         if ($pad -lt 0) { $pad = 0 }
         $spaces = " " * $pad
-        Write-Host ("  {0}{1}{2} {3}{4} {0}{1}{2}" -f $c.Border, $g.VLine, $c.Reset, $item, $spaces)
+        Write-Host ("  {0}{1}{2} {3}{4} {0}{1}{2}{5}" -f $c.Border, $g.VLine, $c.Reset, $item, $spaces, $c.ClearLine)
     }
 
     $hBottom = [string]::new($g.HLine, $inner)
-    Write-Host ("  {0}{1}{2}{3}{4}" -f $c.Border, $g.BotL, $hBottom, $g.BotR, $c.Reset)
+    Write-Host ("  {0}{1}{2}{3}{4}{5}" -f $c.Border, $g.BotL, $hBottom, $g.BotR, $c.Reset, $c.ClearLine)
 }
 
 function Write-WMBannerBox {
@@ -212,15 +239,15 @@ function Write-WMBannerBox {
     $g = $global:WM_Glyphs
     $h = [string]::new($g.HLine, $Width - 2)
 
-    Write-Host ("  {0}{1}{2}{3}{4}" -f $c.Border, $g.TopL, $h, $g.TopR, $c.Reset)
+    Write-Host ("  {0}{1}{2}{3}{4}{5}" -f $c.Border, $g.TopL, $h, $g.TopR, $c.Reset, $c.ClearLine)
     foreach ($item in $Lines) {
         $plain = $item -replace "\x1B\[[0-9;]*[a-zA-Z]", ""
         $pad = $Width - 4 - $plain.Length
         if ($pad -lt 0) { $pad = 0 }
         $spaces = " " * $pad
-        Write-Host ("  {0}{1}{2} {3}{4} {0}{1}{2}" -f $c.Border, $g.VLine, $c.Reset, $item, $spaces)
+        Write-Host ("  {0}{1}{2} {3}{4} {0}{1}{2}{5}" -f $c.Border, $g.VLine, $c.Reset, $item, $spaces, $c.ClearLine)
     }
-    Write-Host ("  {0}{1}{2}{3}{4}" -f $c.Border, $g.BotL, $h, $g.BotR, $c.Reset)
+    Write-Host ("  {0}{1}{2}{3}{4}{5}" -f $c.Border, $g.BotL, $h, $g.BotR, $c.Reset, $c.ClearLine)
 }
 
 function Write-WMShortcuts {
@@ -243,7 +270,7 @@ function Write-WMShortcuts {
     }
 
     $sep = ("  {0}{1}{2}  " -f $c.Border, $g.Dot, $c.Reset)
-    Write-Host ("  " + ($parts -join $sep))
+    Write-Host ("  " + ($parts -join $sep) + $c.ClearLine)
 }
 
 function Write-WMSuccess {
